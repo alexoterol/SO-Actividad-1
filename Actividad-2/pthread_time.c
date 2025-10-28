@@ -7,16 +7,12 @@
 
 void *thread_function(void *arg) {
     struct timeval start, end;
-    long seconds, useconds;
-    gettimeofday(&start, NULL);  // Time before thread starts
+    gettimeofday(&start, NULL);  // Tiempo antes de la ejecucion
 
-    // Simulate some task
-    // sleep(1);  // Example: simulate the execution of a thread
+    int calcSum = 2+2;  // Ejecutar un comando
 
-    gettimeofday(&end, NULL);  // Time after thread execution starts
-    seconds = end.tv_sec - start.tv_sec;
-    useconds = end.tv_usec - start.tv_usec;
-    printf("Thread: Time elapsed (pthread_create) = %ld seconds and %ld microseconds\n", seconds, useconds);
+    gettimeofday(&end, NULL);  // Tiempo despues de la ejecucion
+    printf("Resultado: %d, ", calcSum);
 
     return NULL;
 }
@@ -27,21 +23,21 @@ void measure_time_pthread(int n) {
     pthread_t thread_id;
 
     for (int i = 0; i < n; i++) {
-        gettimeofday(&start, NULL);  // Time before thread creation
+        gettimeofday(&start, NULL);  // Tiempo antes de la creacion del hilo
         
         pthread_create(&thread_id, NULL, thread_function, NULL);
-        pthread_join(thread_id, NULL);  // Wait for thread to finish
+        pthread_join(thread_id, NULL);  // Esperar a los hilos a que terminen
         
-        gettimeofday(&end, NULL);  // Time after thread starts
+        gettimeofday(&end, NULL);  // Tiempo despues de terminar ejecuciones
         seconds = end.tv_sec - start.tv_sec;
         useconds = end.tv_usec - start.tv_usec;
-        printf("Thread %d: Time elapsed (pthread_create) = %ld seconds and %ld microseconds\n", i+1, seconds, useconds);
+        printf("Hilo %d: Tiempo transcurrido (pthread_create) = %ld segundos y %ld microsegundos\n", i+1, seconds, useconds);
     }
 }
 
 int main() {
     int n;
-    printf("Enter the number of threads to create: ");
+    printf("Ingresa el numero de hilos: ");
     scanf("%d", &n);
     measure_time_pthread(n);
     return 0;

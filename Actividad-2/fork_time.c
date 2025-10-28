@@ -10,28 +10,27 @@ void measure_time_fork(int n) {
     pid_t pid;
 
     for (int i = 0; i < n; i++) {
-        gettimeofday(&start, NULL);  // Time before fork
+        gettimeofday(&start, NULL);  // Tiempo antes de iniciar fork
         
         pid = fork();
         
-        if (pid == 0) {
-            // Child process
-            gettimeofday(&end, NULL);  // Time after the first instruction of the child
-            // Example: simulate the execution of a thread 
+        if (pid == 0) { // Hijo
+            gettimeofday(&end, NULL);  // Tiempo antes de la primera instruccion
+            int calcSum = 2+2; // Ejecutar un comando 
             seconds = end.tv_sec - start.tv_sec;
             useconds = end.tv_usec - start.tv_usec;
-            printf("Process %d: Time elapsed (fork) = %ld seconds and %ld microseconds\n", i+1, seconds, useconds);
+            printf("Resultado: %d, Proceso %d: Tiempo transcurrido (fork) = %ld segundos y %ld microsegundos.\n", calcSum, i+1, seconds, useconds);
             exit(0);
         }
         else {
-            wait(NULL);  // Wait for the child to finish
+            wait(NULL);  // Esperar que proceso hijo termine
         }
     }
 }
 
 int main() {
     int n;
-    printf("Enter the number of processes to create: ");
+    printf("Ingresar numero de procesos: ");
     scanf("%d", &n);
     measure_time_fork(n);
     return 0;

@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h>
+#include <sys/wait.h> // Libreria necesaria para waitpid(PID,STATUS,FLAGS)
 
 #define STDIN 0
 #define STDOUT 1
@@ -13,50 +13,41 @@ int main() {
     int fd[2];
     
     while (1) {
-        // Imprimir mensaje para ingresar el comando
-        printf("Ingrese un comando: ");
-        // Leer el comando del usuario
+        printf("(◣_◢)>: ");
         fgets(command, sizeof(command), stdin);
-        
-        // Eliminar el salto de línea que fgets captura
-        command[strcspn(command, "\n")] = 0;
+        command[strcspn(command, "\n")] = 0; // Busca en command el \n y reemplazalo por \0
 
-        // Si el usuario escribe "exit", salir del bucle
         if (strncmp(command, "exit", 4) == 0) {
-            break;  // Termina el ciclo si el comando es "exit"
+            break;  // Salir del programa si se escribe exit
         }
 
-        // Crear el pipe
-        if (pipe(fd) == -1) {
-            perror("Pipe failed");
-            return 1;
-        }
-
-        // Crear el proceso hijo
-        pid = fork();  // Crear un proceso hijo
+        pipe(fd);  // Crear pipe
+        pid = fork();  // Crear proceso hijo
         
-        if (pid == 0) {  // Este es el proceso hijo
-            close(fd[0]);  // Cierra la entrada estándar del hijo
-            dup2(fd[1], STDOUT);  // Redirige la salida estándar al pipe
-            close(fd[1]);  // Cierra el descriptor de escritura del pipe
+        if (pid == 0) {  // Proceso HIJO
+            close(STDIN);
+            dup(fd[0]);  // Redirige stdin al pipe
+            close(fd[0]); // Cierra file descriptor no usado de lectura
+            close(fd[1]); // Hijo no escribe al pipe
 
-            // Ejecutar el comando con execvp
-            char *args[] = {"/bin/cat", "-c", command, NULL};
-            execvp(args[0], args);  // Ejecuta el comando
-            perror("execvp failed");  // Si execvp falla, mostrar error
-            exit(0);  // Termina el proceso hijo
-        } else if (pid > 0) {  // Este es el proceso padre
-            close(fd[1]);  // Cierra la salida estándar del padre
-            dup2(fd[0], STDIN);  // Redirige la entrada estándar al pipe
-            close(fd[0]);  // Cierra el descriptor de lectura del pipe
+            // Ejecutar comando con execvp
+            char *args[] = {"/bin/sh", "-c", command, NULL}; // Ruta del comando, ejecutar lo siguiente como comando, variable ingresada por usuario, valor final.
+            execvp(args[0], args);  // Ejecuta el comando Shell para que lo interprete y ejecute, argumentos que pasan al programa ejecutable.
+            exit(0);  // Terminar proceso
+        } else {  // Proceso PADRE
+            close(fd[1]); // Padre no escribe al pipe
+            char buffer[1000]; // Variable para almacenar los datos leidos desde el pipe 
+            ssize_t bytesRead; // Almacenar numero de bytes que se leen del pipe
 
-            // Espera a que el proceso hijo termine
-            waitpid(pid, NULL, 0);  // Espera a que termine el proceso hijo
-        } else {
-            perror("Fork failed");
-            return 1;  // En caso de que fork falle
+            while ((bytesRead = read(fd[0], buffer, sizeof(buffer)-1)) > 0 ){ // Leer lo que haya en el pipe y almacenarlo en el buffer hasta que haya solo un espacio sobrante.
+                buffer[bytesRead] = '\0'; // En el ultimo index del buffer cargado con la info, reemplazarlo por \0
+                write(STDOUT, buffer, bytesRead); //Escribir en la terminal la informacion almacenada en el buffer y asegurate que el mensaje tiene bytesRead de longitud.
+            }
+            close(fd[0]); // Cerrar el extremo de lectura
+            waitpid(pid, NULL, 0);  // Espera la terminacion del proceso hijo
         }
     }
 
-    return 0;  // Termina el programa
+    return 0;
 }
+
